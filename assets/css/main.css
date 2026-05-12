@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Page background — soft off-white with a slight blue-gray tint */
+    --background: 220 22% 97%;
+    --foreground: 222 47% 11%;
+
+    /* Cards sit on pure white */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Indigo-violet primary */
+    --primary: 252 80% 57%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Subtle secondary */
+    --secondary: 220 14% 93%;
+    --secondary-foreground: 222 47% 20%;
+
+    --muted: 220 14% 93%;
+    --muted-foreground: 220 9% 50%;
+
+    --accent: 220 14% 93%;
+    --accent-foreground: 222 47% 20%;
+
+    /* Red destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Emerald success — completed tasks */
+    --success: 152 69% 31%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 220 13% 89%;
+    --input: 220 13% 89%;
+    --ring: 252 80% 57%;
+
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Task list enter/leave transitions */
+.task-enter-active {
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.task-leave-active {
+  transition: all 0.18s ease-in;
+  position: absolute;
+  width: 100%;
+}
+.task-enter-from {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+.task-leave-to {
+  opacity: 0;
+  transform: translateX(16px) scale(0.97);
+}
+.task-move {
+  transition: transform 0.2s ease;
+}
