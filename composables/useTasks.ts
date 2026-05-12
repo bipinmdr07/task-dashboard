@@ -26,11 +26,22 @@ const state = reactive<TaskState>({
 })
 
 export function useTasks() {
-  const completedCount = computed(() => state.tasks.filter(t => t.completed).length)
-  const pendingCount = computed(() => state.tasks.filter(t => !t.completed).length)
+  // Single pass over the task list so both counts share one iteration
+  const taskCounts = computed(() =>
+    state.tasks.reduce(
+      (acc, t) => {
+        if (t.completed) acc.completed++
+        else acc.pending++
+        return acc
+      },
+      { completed: 0, pending: 0 },
+    ),
+  )
+  const completedCount = computed(() => taskCounts.value.completed)
+  const pendingCount = computed(() => taskCounts.value.pending)
   const completionPercent = computed(() => {
     if (state.tasks.length === 0) return 0
-    return Math.round((completedCount.value / state.tasks.length) * 100)
+    return Math.round((taskCounts.value.completed / state.tasks.length) * 100)
   })
 
   function addTask(title: string) {

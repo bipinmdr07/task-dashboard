@@ -29,6 +29,10 @@ const {
   setApiError,
 } = useTasks()
 
+const taskTotalLabel = computed(() =>
+  `${tasks.value.length} task${tasks.value.length === 1 ? '' : 's'} total`,
+)
+
 interface JsonPlaceholderTodo {
   id: number
   title: string
@@ -92,7 +96,7 @@ onMounted(async () => {
     <Card>
       <CardHeader>
         <CardTitle>All Tasks</CardTitle>
-        <CardDescription>{{ tasks.length }} task{{ tasks.length !== 1 ? 's' : '' }} total</CardDescription>
+        <CardDescription>{{ taskTotalLabel }}</CardDescription>
       </CardHeader>
       <CardContent class="px-3 pb-3">
         <TaskList
