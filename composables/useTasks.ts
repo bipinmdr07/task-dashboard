@@ -5,25 +5,62 @@ export interface Task {
   createdAt: Date
 }
 
-interface JsonPlaceholderTodo {
+export const TASK_STORAGE_KEY = 'task-dashboard:tasks'
+
+// On-disk representation — createdAt is an ISO string so JSON round-trips cleanly
+interface StoredTask {
   id: number
   title: string
   completed: boolean
-  userId: number
+  createdAt: string
+}
+
+interface StoragePayload {
+  v: 1
+  tasks: StoredTask[]
 }
 
 interface TaskState {
   tasks: Task[]
-  apiError: string | null
-  seeded: boolean
 }
 
 // Module-level singleton so state persists across page navigation
 const state = reactive<TaskState>({
   tasks: [],
-  apiError: null,
-  seeded: false,
 })
+
+/**
+ * Applies a previously serialised snapshot to the module singleton.
+ * Silently no-ops on anything that doesn't look like a valid v1 payload so
+ * corrupt storage never wipes the user's tasks.
+ */
+export function hydrateTasksFromStorage(raw: unknown): void {
+  if (
+    !raw ||
+    typeof raw !== 'object' ||
+    (raw as StoragePayload).v !== 1 ||
+    !Array.isArray((raw as StoragePayload).tasks)
+  ) return
+
+  const payload = raw as StoragePayload
+  state.tasks = payload.tasks.map(t => ({
+    ...t,
+    createdAt: new Date(t.createdAt),
+  }))
+}
+
+/** Returns a plain object ready for JSON.stringify. */
+export function getTasksStorageSnapshot(): StoragePayload {
+  return {
+    v: 1,
+    tasks: state.tasks.map(t => ({
+      id: t.id,
+      title: t.title,
+      completed: t.completed,
+      createdAt: t.createdAt.toISOString(),
+    })),
+  }
+}
 
 export function useTasks() {
   // Single pass over the task list so both counts share one iteration
@@ -47,8 +84,7 @@ export function useTasks() {
   function addTask(title: string) {
     const trimmed = title.trim()
     if (!trimmed) return
-    // Place new IDs above the seeded range (seed IDs come from JSONPlaceholder, max 200)
-    const maxId = state.tasks.reduce((max, t) => Math.max(max, t.id), 1000)
+    const maxId = state.tasks.reduce((max, t) => Math.max(max, t.id), 0)
     state.tasks.unshift({
       id: maxId + 1,
       title: trimmed,
@@ -67,43 +103,13 @@ export function useTasks() {
     if (index !== -1) state.tasks.splice(index, 1)
   }
 
-  function dismissError() {
-    state.apiError = null
-  }
-
-  /**
-   * Merges seed tasks from the API on first load only.
-   * Skips if tasks already exist (e.g. user added tasks before seed completed).
-   */
-  function mergeSeedTasks(remoteTasks: JsonPlaceholderTodo[]) {
-    if (state.seeded) return
-    state.seeded = true
-    if (state.tasks.length > 0) return
-    state.tasks = remoteTasks.map(todo => ({
-      id: todo.id,
-      title: todo.title,
-      completed: todo.completed,
-      createdAt: new Date(),
-    }))
-  }
-
-  function setApiError(message: string) {
-    state.apiError = message
-    state.seeded = true // Don't retry after error
-  }
-
   return {
     tasks: computed(() => state.tasks),
-    apiError: computed(() => state.apiError),
-    seeded: computed(() => state.seeded),
     completedCount,
     pendingCount,
     completionPercent,
     addTask,
     toggleTask,
     deleteTask,
-    dismissError,
-    mergeSeedTasks,
-    setApiError,
   }
 }
