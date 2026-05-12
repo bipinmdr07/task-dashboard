@@ -4,6 +4,7 @@ import type { Task } from '~/composables/useTasks'
 
 interface Props {
   tasks: Task[]
+  filteredEmptyMessage?: string
 }
 
 defineProps<Props>()
@@ -16,9 +17,18 @@ const emit = defineEmits<{
 
 <template>
   <div>
-    <!-- Empty state -->
+    <!-- Filtered empty: tasks exist but none match the active filter -->
     <div
-      v-if="tasks.length === 0"
+      v-if="tasks.length === 0 && filteredEmptyMessage"
+      class="flex flex-col items-center justify-center py-12 text-center"
+    >
+      <div class="mb-3 text-4xl">🔍</div>
+      <p class="font-medium text-foreground">{{ filteredEmptyMessage }}</p>
+    </div>
+
+    <!-- True empty: no tasks at all -->
+    <div
+      v-else-if="tasks.length === 0"
       class="flex flex-col items-center justify-center py-12 text-center"
     >
       <div class="mb-3 text-4xl">✨</div>
