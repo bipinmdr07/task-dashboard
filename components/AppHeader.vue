@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
+import { Sun, Moon } from 'lucide-vue-next'
 
 const route = useRoute()
+const colorMode = useColorMode()
 
 const navLinks = [
   { to: '/', label: 'Dashboard' },
@@ -12,6 +14,10 @@ const navLinks = [
 function isActive(path: string) {
   if (path === '/') return route.path === '/'
   return route.path.startsWith(path)
+}
+
+function toggleColorMode() {
+  colorMode.preference = colorMode.value === 'dark' ? 'light' : 'dark'
 }
 </script>
 
@@ -28,23 +34,40 @@ function isActive(path: string) {
         <span class="text-lg font-bold tracking-tight text-foreground">Task Dashboard</span>
       </div>
 
-      <!-- Nav links -->
-      <nav class="flex items-center gap-1" aria-label="Main navigation">
-        <NuxtLink
-          v-for="link in navLinks"
-          :key="link.to"
-          :to="link.to"
-          :class="[
-            'rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-            isActive(link.to)
-              ? 'bg-primary/10 text-primary'
-              : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
-          ]"
-          :aria-current="isActive(link.to) ? 'page' : undefined"
+      <!-- Nav links + dark mode toggle -->
+      <div class="flex items-center gap-1">
+        <nav class="flex items-center gap-1" aria-label="Main navigation">
+          <NuxtLink
+            v-for="link in navLinks"
+            :key="link.to"
+            :to="link.to"
+            :class="[
+              'rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              isActive(link.to)
+                ? 'bg-primary/10 text-primary'
+                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+            ]"
+            :aria-current="isActive(link.to) ? 'page' : undefined"
+          >
+            {{ link.label }}
+          </NuxtLink>
+        </nav>
+
+        <!-- Divider -->
+        <div class="mx-2 h-4 w-px bg-border" aria-hidden="true" />
+
+        <!-- Color mode toggle -->
+        <button
+          type="button"
+          :aria-label="colorMode.value === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+          :aria-pressed="colorMode.value === 'dark'"
+          class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          @click="toggleColorMode"
         >
-          {{ link.label }}
-        </NuxtLink>
-      </nav>
+          <Sun v-if="colorMode.value === 'dark'" class="h-4 w-4" />
+          <Moon v-else class="h-4 w-4" />
+        </button>
+      </div>
     </div>
   </header>
 </template>

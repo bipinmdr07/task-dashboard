@@ -43,6 +43,42 @@
 
     --radius: 0.75rem;
   }
+
+  /* Dark theme — same tokens, dark navy/slate palette */
+  .dark {
+    --background: 224 25% 10%;
+    --foreground: 213 31% 91%;
+
+    --card: 224 22% 14%;
+    --card-foreground: 213 31% 91%;
+
+    --popover: 224 22% 14%;
+    --popover-foreground: 213 31% 91%;
+
+    /* Keep the indigo-violet primary, brighten slightly for contrast */
+    --primary: 252 80% 65%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 224 18% 20%;
+    --secondary-foreground: 213 20% 72%;
+
+    --muted: 224 18% 20%;
+    --muted-foreground: 215 16% 55%;
+
+    --accent: 224 18% 20%;
+    --accent-foreground: 213 20% 72%;
+
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Slightly brighter emerald so it reads on dark */
+    --success: 152 60% 42%;
+    --success-foreground: 0 0% 100%;
+
+    --border: 224 18% 22%;
+    --input: 224 18% 22%;
+    --ring: 252 80% 65%;
+  }
 }
 
 @layer base {
