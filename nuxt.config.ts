@@ -10,4 +10,18 @@ export default defineNuxtConfig({
   tailwindcss: {
     configPath: '~/tailwind.config.ts',
   },
+  vite: {
+    build: {
+      // Keep each page's styles in its own chunk so they load only when the route is visited
+      cssCodeSplit: true,
+      rollupOptions: {
+        output: {
+          // Pull the shared Vue runtime into one vendor chunk; every page chunk
+          manualChunks: {
+            'vue-vendor': ['vue', 'vue-router'],
+          },
+        },
+      },
+    },
+  },
 })
