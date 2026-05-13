@@ -9,8 +9,9 @@ function isLikelyFetchError(err: unknown): boolean {
 function notifyGenericError() {
   try {
     useNotificationStore().notify('error', GENERIC)
-  } catch {
-    // Pinia might not be ready yet (very early boot errors) — swallow so we don't loop
+  } catch (e: unknown) {
+    // Pinia might not be ready yet (very early boot errors) — log only so we don't recurse into notify
+    console.warn('[error-reporting] Could not show generic error toast', e)
   }
 }
 

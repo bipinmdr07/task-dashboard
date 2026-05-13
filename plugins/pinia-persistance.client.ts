@@ -8,7 +8,10 @@ import { useNotificationStore } from '~/stores/useNotificationStore'
 let persistWarningShown = false
 
 /** One warning per session so quota / private mode does not spam toasts. */
-function warnPersistFailureOnce() {
+function warnPersistFailureOnce(cause?: unknown) {
+  if (import.meta.dev && cause !== undefined) {
+    console.warn('[pinia-persistence] localStorage setItem failed', cause)
+  }
   if (persistWarningShown) return
   persistWarningShown = true
   try {
@@ -16,8 +19,9 @@ function warnPersistFailureOnce() {
       'warning',
       'Could not save locally (storage may be full or blocked).',
     )
-  } catch {
-    // Store not ready — skip
+  } catch (e: unknown) {
+    // Store not ready — skip the toast but leave a trace for debugging
+    console.warn('[pinia-persistence] Could not show persist warning', e)
   }
 }
 
@@ -27,7 +31,9 @@ function readJsonFromLocalStorage(key: string): unknown {
     const raw = localStorage.getItem(key)
     if (raw == null) return null
     return JSON.parse(raw)
-  } catch {
+  } catch (e: unknown) {
+    // Missing key is handled above; this is bad JSON or storage access errors
+    if (import.meta.dev) console.warn(`[pinia-persistence] Could not read ${key}`, e)
     return null
   }
 }
@@ -35,16 +41,16 @@ function readJsonFromLocalStorage(key: string): unknown {
 function persistTasks(store: ReturnType<typeof useTasksStore>) {
   try {
     localStorage.setItem(TASK_STORAGE_KEY, JSON.stringify(store.getStorageSnapshot()))
-  } catch {
-    warnPersistFailureOnce()
+  } catch (e: unknown) {
+    warnPersistFailureOnce(e)
   }
 }
 
 function persistPreferences(store: ReturnType<typeof usePreferencesStore>) {
   try {
     localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(store.getStorageSnapshot()))
-  } catch {
-    warnPersistFailureOnce()
+  } catch (e: unknown) {
+    warnPersistFailureOnce(e)
   }
 }
 

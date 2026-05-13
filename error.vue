@@ -30,8 +30,9 @@ onMounted(() => {
       ? 'That page could not be found.'
       : 'Something went wrong. Please try again.'
     useNotificationStore().notify('error', toastMsg)
-  } catch {
+  } catch (e: unknown) {
     // If Pinia isn't available here we still want the page itself to render
+    console.warn('[error.vue] Could not show error toast', e)
   }
 })
 
