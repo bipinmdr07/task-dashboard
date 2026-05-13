@@ -1,56 +1,22 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import TaskInput from '~/components/TaskInput.vue'
 import TaskList from '~/components/TaskList.vue'
+import FilterBar from '~/components/FilterBar.vue'
 import Card from '~/components/ui/card/Card.vue'
 import CardHeader from '~/components/ui/card/CardHeader.vue'
 import CardTitle from '~/components/ui/card/CardTitle.vue'
 import CardDescription from '~/components/ui/card/CardDescription.vue'
 import CardContent from '~/components/ui/card/CardContent.vue'
 import Badge from '~/components/ui/badge/Badge.vue'
-import Button from '~/components/ui/button/Button.vue'
 
 useHead({ title: 'Tasks — Task Dashboard' })
 
-const {
-  tasks,
-  completedCount,
-  pendingCount,
-  addTask,
-  toggleTask,
-  deleteTask,
-} = useTasks()
+const taskStore = useTasksStore()
+const { completedCount, pendingCount, loading, error } = storeToRefs(taskStore)
+const { addTask, toggleTask, deleteTask, clearError } = taskStore
 
-type TaskFilter = 'all' | 'active' | 'completed'
-
-const taskFilter = ref<TaskFilter>('all')
-
-const displayedTasks = computed(() => {
-  if (taskFilter.value === 'active') return tasks.value.filter(t => !t.completed)
-  if (taskFilter.value === 'completed') return tasks.value.filter(t => t.completed)
-  return tasks.value
-})
-
-const taskTotalLabel = computed(() => {
-  const total = tasks.value.length
-  const shown = displayedTasks.value.length
-  if (taskFilter.value !== 'all' && shown !== total)
-    return `Showing ${shown} of ${total} task${total === 1 ? '' : 's'}`
-  return `${total} task${total === 1 ? '' : 's'} total`
-})
-
-// Message shown when the filter returns nothing but tasks do exist
-const filteredEmptyMessage = computed<string | undefined>(() => {
-  if (displayedTasks.value.length === 0 && tasks.value.length > 0) {
-    return taskFilter.value === 'active' ? 'No active tasks' : 'No completed tasks'
-  }
-  return undefined
-})
-
-const FILTERS: { label: string; value: TaskFilter }[] = [
-  { label: 'All', value: 'all' },
-  { label: 'Active', value: 'active' },
-  { label: 'Completed', value: 'completed' },
-]
+const { displayedTasks, taskTotalLabel, filteredEmptyMessage } = useTaskSorting()
 </script>
 
 <template>
@@ -67,49 +33,47 @@ const FILTERS: { label: string; value: TaskFilter }[] = [
       </div>
     </div>
 
+    <!-- Error banner -->
+    <div v-if="error" role="alert"
+      class="flex items-start justify-between gap-3 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+      <span>{{ error }}</span>
+      <button type="button" aria-label="Dismiss error"
+        class="shrink-0 rounded p-0.5 transition-colors hover:bg-destructive/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        @click="clearError">
+        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
     <!-- Add task card -->
     <Card>
       <CardContent class="pt-6">
-        <TaskInput @add="addTask" />
+        <TaskInput :disabled="loading" @add="addTask" />
       </CardContent>
     </Card>
 
     <!-- Task list card -->
     <Card>
       <CardHeader>
-        <div class="flex items-center justify-between gap-4">
-          <div>
+        <div class="flex flex-col gap-3">
+          <!-- Title + count -->
+          <div class="min-w-0">
             <CardTitle>Tasks</CardTitle>
             <CardDescription>{{ taskTotalLabel }}</CardDescription>
           </div>
-
-          <!-- All / Active / Completed filter -->
-          <div
-            role="tablist"
-            aria-label="Filter tasks"
-            class="flex rounded-lg border p-1 gap-1"
-          >
-            <Button
-              v-for="f in FILTERS"
-              :key="f.value"
-              role="tab"
-              size="sm"
-              :variant="taskFilter === f.value ? 'default' : 'ghost'"
-              :aria-selected="taskFilter === f.value"
-              @click="taskFilter = f.value"
-            >
-              {{ f.label }}
-            </Button>
-          </div>
+          <!-- Filter tabs + sort controls -->
+          <FilterBar />
         </div>
       </CardHeader>
       <CardContent class="px-3 pb-3">
-        <TaskList
-          :tasks="displayedTasks"
-          :filtered-empty-message="filteredEmptyMessage"
-          @toggle="toggleTask"
-          @delete="deleteTask"
-        />
+        <!-- Loading skeleton -->
+        <div v-if="loading" class="space-y-1 py-2">
+          <div v-for="n in 5" :key="n" class="h-12 animate-pulse rounded-lg bg-muted" />
+        </div>
+
+        <TaskList v-else :tasks="displayedTasks" :filtered-empty-message="filteredEmptyMessage" @toggle="toggleTask"
+          @delete="deleteTask" />
       </CardContent>
     </Card>
   </div>

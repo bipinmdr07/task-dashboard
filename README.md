@@ -43,7 +43,7 @@ A lightweight personal task manager built with Nuxt 3, Vue 3, and Tailwind CSS. 
 │   ├── tasks.vue              # Full task list with filters
 │   └── about.vue              # About page
 ├── plugins/
-│   └── task-persistence.client.ts  # Hydrates tasks from localStorage on startup; watches for changes to persist them
+│   └── pinia-persistance.client.ts  # Hydrates Pinia stores from localStorage on startup; watches for changes to persist them
 └── nuxt.config.ts
 ```
 
@@ -78,9 +78,9 @@ All colours are defined as HSL CSS custom properties in `assets/css/main.css`. T
 
 ## How Task Persistence Works
 
-`useTasks` holds a module-level reactive singleton so state survives client-side navigation without re-fetching. The client-only plugin (`task-persistence.client.ts`) runs once on startup:
+Pinia stores hold task and preference state. The client-only plugin (`pinia-persistance.client.ts`) runs once on startup:
 
-1. Reads `task-dashboard:tasks` from `localStorage` and calls `hydrateTasksFromStorage` to populate the singleton before any component renders.
-2. Starts a deep `watch` on the task list and writes a versioned JSON snapshot on every mutation.
+1. Reads `task-dashboard:tasks` and `task-dashboard:preferences` from `localStorage` and hydrates the Pinia stores before dependent UI runs.
+2. Starts debounced `watch` handlers on tasks and preferences and writes versioned JSON snapshots on changes.
 
 The payload is versioned (`{ v: 1, tasks: [...] }`), so future schema changes can migrate data gracefully.

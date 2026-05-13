@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia'
 import SummaryCard from '~/components/SummaryCard.vue'
 import ProgressBar from '~/components/ProgressBar.vue'
 import Card from '~/components/ui/card/Card.vue'
@@ -10,9 +11,11 @@ import Badge from '~/components/ui/badge/Badge.vue'
 
 useHead({ title: 'Dashboard — Task Dashboard' })
 
-const { tasks, completedCount, pendingCount, completionPercent } = useTasks()
+const taskStore = useTasksStore()
+const { tasks, completedCount, pendingCount, completionPercentage, tasksByDate } =
+  storeToRefs(taskStore)
 
-const recentTasks = computed(() => tasks.value.slice(0, 5))
+const recentTasks = computed(() => tasksByDate.value.slice(0, 5))
 </script>
 
 <template>
@@ -25,27 +28,12 @@ const recentTasks = computed(() => tasks.value.slice(0, 5))
 
     <!-- Summary cards -->
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-      <SummaryCard
-        title="Total Tasks"
-        :value="tasks.length"
-        description="All tasks in your list"
-        variant="default"
-        icon="📋"
-      />
-      <SummaryCard
-        title="Completed"
-        :value="completedCount"
-        description="Tasks marked as done"
-        variant="success"
-        icon="✅"
-      />
-      <SummaryCard
-        title="Pending"
-        :value="pendingCount"
-        description="Still to be completed"
-        variant="pending"
-        icon="⏳"
-      />
+      <SummaryCard title="Total Tasks" :value="tasks.length" description="All tasks in your list" variant="default"
+        icon="📋" />
+      <SummaryCard title="Completed" :value="completedCount" description="Tasks marked as done" variant="success"
+        icon="✅" />
+      <SummaryCard title="Pending" :value="pendingCount" description="Still to be completed" variant="pending"
+        icon="⏳" />
     </div>
 
     <!-- Progress card -->
@@ -57,10 +45,7 @@ const recentTasks = computed(() => tasks.value.slice(0, 5))
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ProgressBar
-          :value="completionPercent"
-          label="Completion progress"
-        />
+        <ProgressBar :value="completionPercentage" label="Completion progress" />
       </CardContent>
     </Card>
 
@@ -72,20 +57,14 @@ const recentTasks = computed(() => tasks.value.slice(0, 5))
             <CardTitle>Recent Tasks</CardTitle>
             <CardDescription class="mt-1">Your five most recent items</CardDescription>
           </div>
-          <NuxtLink
-            to="/tasks"
-            class="text-sm font-medium text-primary hover:underline underline-offset-4"
-          >
+          <NuxtLink to="/tasks" class="text-sm font-medium text-primary hover:underline underline-offset-4">
             View all →
           </NuxtLink>
         </div>
       </CardHeader>
       <CardContent>
         <!-- Empty state -->
-        <div
-          v-if="tasks.length === 0"
-          class="flex flex-col items-center justify-center py-10 text-center"
-        >
+        <div v-if="tasks.length === 0" class="flex flex-col items-center justify-center py-10 text-center">
           <div class="mb-3 text-4xl">📭</div>
           <p class="font-medium text-foreground">No tasks yet</p>
           <p class="mt-1 text-sm text-muted-foreground">
@@ -97,19 +76,13 @@ const recentTasks = computed(() => tasks.value.slice(0, 5))
 
         <!-- Task preview list -->
         <ul v-else class="divide-y divide-border">
-          <li
-            v-for="task in recentTasks"
-            :key="task.id"
-            class="flex items-center justify-between gap-3 py-3"
-          >
-            <span
-              :class="[
-                'flex-1 truncate text-sm',
-                task.completed
-                  ? 'line-through text-muted-foreground opacity-60'
-                  : 'text-foreground',
-              ]"
-            >
+          <li v-for="task in recentTasks" :key="task.id" class="flex items-center justify-between gap-3 py-3">
+            <span :class="[
+              'flex-1 truncate text-sm',
+              task.completed
+                ? 'line-through text-muted-foreground opacity-60'
+                : 'text-foreground',
+            ]">
               {{ task.title }}
             </span>
             <Badge :variant="task.completed ? 'success' : 'pending'">
