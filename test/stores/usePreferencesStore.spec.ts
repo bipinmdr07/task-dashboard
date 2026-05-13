@@ -45,12 +45,6 @@ describe('usePreferencesStore', () => {
     expect(store.theme).toBe('dark')
   })
 
-  it('toggleSidebar flips sidebarCollapsed', () => {
-    const store = usePreferencesStore()
-    store.toggleSidebar()
-    expect(store.sidebarCollapsed).toBe(true)
-  })
-
   it('hydrateFromStorage ignores non-object', () => {
     const store = usePreferencesStore()
     store.setSortBy('title')
@@ -103,17 +97,6 @@ describe('usePreferencesStore', () => {
     expect(store.theme).toBe('light')
   })
 
-  it('hydrateFromStorage applies sidebarCollapsed when boolean', () => {
-    const store = usePreferencesStore()
-    store.hydrateFromStorage({
-      v: 1,
-      sortBy: 'createdAt',
-      sortDirection: 'desc',
-      sidebarCollapsed: true,
-    })
-    expect(store.sidebarCollapsed).toBe(true)
-  })
-
   it('hydrateFromStorage skips invalid sortBy string', () => {
     const store = usePreferencesStore()
     store.setSortBy('title')
@@ -160,31 +143,18 @@ describe('usePreferencesStore', () => {
     expect(store.theme).toBe('system')
   })
 
-  it('hydrateFromStorage skips sidebarCollapsed when not boolean', () => {
-    const store = usePreferencesStore()
-    store.hydrateFromStorage({
-      v: 1,
-      sortBy: 'title',
-      sortDirection: 'desc',
-      sidebarCollapsed: 'yes' as unknown as boolean,
-    })
-    expect(store.sidebarCollapsed).toBe(false)
-  })
-
   it('getStorageSnapshot reflects current state and version', () => {
     const store = usePreferencesStore()
     store.setSortBy('title')
     store.setSortDirection('asc')
     store.setFilter('active')
     store.setTheme('dark')
-    store.sidebarCollapsed = true
     expect(store.getStorageSnapshot()).toEqual({
       v: 1,
       sortBy: 'title',
       sortDirection: 'asc',
       filterStatus: 'active',
       theme: 'dark',
-      sidebarCollapsed: true,
     })
   })
 })

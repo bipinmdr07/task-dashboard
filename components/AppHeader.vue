@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia'
 import { useRoute } from 'vue-router'
-import { Sun, Moon, PanelLeft } from 'lucide-vue-next'
+import { Sun, Moon } from 'lucide-vue-next'
 
 const route = useRoute()
 const colorMode = useColorMode()
 const prefsStore = usePreferencesStore()
-const { sidebarCollapsed } = storeToRefs(prefsStore)
 
 const navLinks = [
   { to: '/', label: 'Dashboard' },
@@ -57,14 +55,6 @@ function toggleColorMode() {
 
         <!-- Divider -->
         <div class="mx-2 h-4 w-px bg-border" aria-hidden="true" />
-
-        <!-- Sidebar toggle -->
-        <button type="button" :aria-label="sidebarCollapsed ? 'Expand layout' : 'Collapse layout'"
-          :aria-pressed="sidebarCollapsed"
-          class="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          @click="prefsStore.toggleSidebar()">
-          <PanelLeft class="h-4 w-4" />
-        </button>
 
         <!-- Color mode toggle -->
         <button type="button" :aria-label="colorMode.value === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"

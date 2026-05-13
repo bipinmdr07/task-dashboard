@@ -19,7 +19,6 @@ export interface PreferencesState {
   sortDirection: SortDirection
   filterStatus: FilterStatus
   theme: Theme
-  sidebarCollapsed: boolean
 }
 
 // Snapshot shape written to localStorage — v1 is kept; new fields are optional
@@ -30,7 +29,6 @@ export interface PreferencesStoragePayload {
   sortDirection: SortDirection
   filterStatus?: FilterStatus
   theme?: Theme
-  sidebarCollapsed?: boolean
 }
 
 export const usePreferencesStore = defineStore('preferences', () => {
@@ -38,7 +36,6 @@ export const usePreferencesStore = defineStore('preferences', () => {
   const sortDirection = ref<SortDirection>('desc')
   const filterStatus = ref<FilterStatus>('all')
   const theme = ref<Theme>('system')
-  const sidebarCollapsed = ref(false)
 
   function setSortBy(value: SortBy) {
     sortBy.value = value
@@ -60,10 +57,6 @@ export const usePreferencesStore = defineStore('preferences', () => {
     theme.value = value
   }
 
-  function toggleSidebar() {
-    sidebarCollapsed.value = !sidebarCollapsed.value
-  }
-
   /**
    * Merges a stored snapshot back into the store. Fields that fail validation
    * are skipped so the ref keeps its default — future additions never cause errors.
@@ -83,9 +76,6 @@ export const usePreferencesStore = defineStore('preferences', () => {
     if (payload.theme && (VALID_THEME as string[]).includes(payload.theme)) {
       theme.value = payload.theme
     }
-    if (typeof payload.sidebarCollapsed === 'boolean') {
-      sidebarCollapsed.value = payload.sidebarCollapsed
-    }
   }
 
   /** Plain object ready for JSON.stringify in the persistence plugin. */
@@ -96,7 +86,6 @@ export const usePreferencesStore = defineStore('preferences', () => {
       sortDirection: sortDirection.value,
       filterStatus: filterStatus.value,
       theme: theme.value,
-      sidebarCollapsed: sidebarCollapsed.value,
     }
   }
 
@@ -105,13 +94,11 @@ export const usePreferencesStore = defineStore('preferences', () => {
     sortDirection,
     filterStatus,
     theme,
-    sidebarCollapsed,
     setSortBy,
     setSortDirection,
     toggleSortDirection,
     setFilter,
     setTheme,
-    toggleSidebar,
     hydrateFromStorage,
     getStorageSnapshot,
   }

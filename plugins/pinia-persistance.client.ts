@@ -80,8 +80,8 @@ export default defineNuxtPlugin({
     const { tasks } = storeToRefs(taskStore)
     watch(tasks, debouncedPersistTasks, { deep: true })
 
-    const { sortBy, sortDirection, filterStatus, theme, sidebarCollapsed } = storeToRefs(prefsStore)
-    watch([sortBy, sortDirection, filterStatus, theme, sidebarCollapsed], debouncedPersistPreferences)
+    const { sortBy, sortDirection, filterStatus, theme } = storeToRefs(prefsStore)
+    watch([sortBy, sortDirection, filterStatus, theme], debouncedPersistPreferences)
 
     // Also keep colorMode in sync whenever the preferences theme changes
     watch(theme, value => { colorMode.preference = value })
