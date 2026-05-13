@@ -242,6 +242,52 @@ describe('useTasksStore', () => {
     expect(store.tasks).toHaveLength(0)
   })
 
+  it('renameTask updates title and notifies', () => {
+    const store = useTasksStore()
+    const notif = useNotificationStore()
+    const spy = vi.spyOn(notif, 'notify')
+    store.tasks = [{ id: 1, title: 'old', completed: false, createdAt: new Date() }]
+    store.renameTask(1, 'new')
+    expect(store.tasks[0]!.title).toBe('new')
+    expect(spy).toHaveBeenCalledWith('info', 'Task updated')
+  })
+
+  it('renameTask trims the title', () => {
+    const store = useTasksStore()
+    store.tasks = [{ id: 1, title: 'old', completed: false, createdAt: new Date() }]
+    store.renameTask(1, '  neat  ')
+    expect(store.tasks[0]!.title).toBe('neat')
+  })
+
+  it('renameTask is a no-op for unknown id', () => {
+    const store = useTasksStore()
+    const notif = useNotificationStore()
+    const spy = vi.spyOn(notif, 'notify')
+    store.tasks = [{ id: 1, title: 't', completed: false, createdAt: new Date() }]
+    store.renameTask(99, 'x')
+    expect(store.tasks[0]!.title).toBe('t')
+    expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('renameTask is a no-op when title is unchanged', () => {
+    const store = useTasksStore()
+    const notif = useNotificationStore()
+    const spy = vi.spyOn(notif, 'notify')
+    store.tasks = [{ id: 1, title: 'same', completed: false, createdAt: new Date() }]
+    store.renameTask(1, 'same')
+    expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('renameTask ignores whitespace-only title', () => {
+    const store = useTasksStore()
+    const notif = useNotificationStore()
+    const spy = vi.spyOn(notif, 'notify')
+    store.tasks = [{ id: 1, title: 'keep', completed: false, createdAt: new Date() }]
+    store.renameTask(1, '   ')
+    expect(store.tasks[0]!.title).toBe('keep')
+    expect(spy).not.toHaveBeenCalled()
+  })
+
   it('clearCompleted does nothing when none completed', () => {
     const store = useTasksStore()
     const notif = useNotificationStore()

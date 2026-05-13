@@ -167,6 +167,15 @@ export const useTasksStore = defineStore('tasks', () => {
     celebrateIfJustCompleted(prevPct)
   }
 
+  function renameTask(id: number, title: string) {
+    const task = tasks.value.find(t => t.id === id)
+    if (!task) return
+    const trimmed = title.trim()
+    if (!trimmed || trimmed === task.title) return
+    task.title = trimmed
+    useNotificationStore().notify('info', 'Task updated')
+  }
+
   function clearCompleted() {
     const count = completedCount.value
     if (count === 0) return
@@ -225,6 +234,7 @@ export const useTasksStore = defineStore('tasks', () => {
     addTask,
     toggleTask,
     deleteTask,
+    renameTask,
     clearCompleted,
     reorderTasks,
     hydrateFromStorage,

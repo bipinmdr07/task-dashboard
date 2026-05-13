@@ -11,6 +11,7 @@ defineProps<Props>()
 
 const emit = defineEmits<{
   toggle: [id: number]
+  rename: [id: number, title: string]
   delete: [id: number]
 }>()
 </script>
@@ -34,7 +35,7 @@ const emit = defineEmits<{
     <!-- Task list with transitions -->
     <TransitionGroup v-else name="task" tag="ul" class="relative space-y-0.5">
       <TaskItem v-for="task in tasks" :key="task.id" :task="task" @toggle="emit('toggle', $event)"
-        @delete="emit('delete', $event)" />
+        @rename="(id, title) => emit('rename', id, title)" @delete="emit('delete', $event)" />
     </TransitionGroup>
   </div>
 </template>

@@ -14,7 +14,7 @@ useHead({ title: 'Tasks — Task Dashboard' })
 
 const taskStore = useTasksStore()
 const { completedCount, pendingCount, loading, error } = storeToRefs(taskStore)
-const { addTask, toggleTask, deleteTask, clearError } = taskStore
+const { addTask, toggleTask, deleteTask, renameTask, clearError } = taskStore
 
 const { displayedTasks, taskTotalLabel, filteredEmptyMessage } = useTaskSorting()
 </script>
@@ -73,7 +73,7 @@ const { displayedTasks, taskTotalLabel, filteredEmptyMessage } = useTaskSorting(
         </div>
 
         <TaskList v-else :tasks="displayedTasks" :filtered-empty-message="filteredEmptyMessage" @toggle="toggleTask"
-          @delete="deleteTask" />
+          @rename="renameTask" @delete="deleteTask" />
       </CardContent>
     </Card>
   </div>
