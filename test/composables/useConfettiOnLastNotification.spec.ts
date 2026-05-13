@@ -48,6 +48,31 @@ describe('useConfettiOnLastNotification', () => {
     expect(mockConfetti).toHaveBeenCalledTimes(1)
   })
 
+  // Matches useNotificationStore.notify() — mutates the array in place so a shallow ref watch would miss it.
+  it('fires confetti when a confetti notification is pushed onto the list', async () => {
+    const Host = defineComponent({
+      setup() {
+        const notifications = ref<Notification[]>([])
+        useConfettiOnLastNotification(notifications)
+        return { notifications }
+      },
+      template: '<div />',
+    })
+    const wrapper = mount(Host)
+    const list = wrapper.vm.notifications as Notification[]
+    list.push({
+      id: 0,
+      type: 'success',
+      message: 'yay',
+      duration: 3000,
+      dismissible: true,
+      confetti: true,
+    })
+    await nextTick()
+    await flushPromises()
+    expect(mockConfetti).toHaveBeenCalledTimes(1)
+  })
+
   it('does not refire confetti for the same notification id', async () => {
     const Host = defineComponent({
       setup() {
