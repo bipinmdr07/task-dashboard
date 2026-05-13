@@ -19,7 +19,7 @@ A lightweight personal task manager built with Nuxt 3, Vue 3, and Tailwind CSS. 
 | Styling | [Tailwind CSS](https://tailwindcss.com) with CSS custom properties for theming |
 | Dark mode | [@nuxtjs/color-mode](https://color-mode.nuxtjs.org) |
 | Icons | [lucide-vue-next](https://lucide.dev) |
-| Primitives | [Radix Vue](https://www.radix-vue.com) |
+| UI building blocks | Custom Vue components styled with Tailwind and [class-variance-authority](https://cva.style/docs) |
 | Animations | [tailwindcss-animate](https://github.com/jamiebuilds/tailwindcss-animate) |
 
 ## Project Structure
