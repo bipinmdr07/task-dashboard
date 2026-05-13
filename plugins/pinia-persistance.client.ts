@@ -3,6 +3,23 @@ import { storeToRefs } from 'pinia'
 import { watch } from 'vue'
 import { TASK_STORAGE_KEY, useTasksStore } from '~/stores/useTasksStore'
 import { PREFERENCES_STORAGE_KEY, usePreferencesStore } from '~/stores/usePreferencesStore'
+import { useNotificationStore } from '~/stores/useNotificationStore'
+
+let persistWarningShown = false
+
+/** One warning per session so quota / private mode does not spam toasts. */
+function warnPersistFailureOnce() {
+  if (persistWarningShown) return
+  persistWarningShown = true
+  try {
+    useNotificationStore().notify(
+      'warning',
+      'Could not save locally (storage may be full or blocked).',
+    )
+  } catch {
+    // Store not ready — skip
+  }
+}
 
 /** Parse one key; result is `null` when missing, invalid JSON, or no access — hydrate helpers treat that as "nothing saved". */
 function readJsonFromLocalStorage(key: string): unknown {
@@ -19,7 +36,7 @@ function persistTasks(store: ReturnType<typeof useTasksStore>) {
   try {
     localStorage.setItem(TASK_STORAGE_KEY, JSON.stringify(store.getStorageSnapshot()))
   } catch {
-    // Storage quota exceeded or access denied — not fatal.
+    warnPersistFailureOnce()
   }
 }
 
@@ -27,7 +44,7 @@ function persistPreferences(store: ReturnType<typeof usePreferencesStore>) {
   try {
     localStorage.setItem(PREFERENCES_STORAGE_KEY, JSON.stringify(store.getStorageSnapshot()))
   } catch {
-    // Storage quota exceeded or access denied — not fatal.
+    warnPersistFailureOnce()
   }
 }
 

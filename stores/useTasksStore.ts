@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { computed, ref, watch } from 'vue'
+import { computed, ref } from 'vue'
 import { useNotificationStore } from '~/stores/useNotificationStore'
 
 export interface Task {
@@ -76,12 +76,19 @@ export const useTasksStore = defineStore('tasks', () => {
     return Math.round((completedCount.value / tasks.value.length) * 100)
   })
 
-  // Fire once when the user completes every task — transition to 100% only
-  watch(completionPercentage, (pct, prev) => {
-    if (pct === 100 && prev !== 100 && tasks.value.length > 0) {
+  // Celebrate only when a user action just pushed us across the finish line.
+  // We deliberately don't react to `completionPercentage` via a watcher because
+  // initial fetch and localStorage hydration can also land on 100%, and we
+  // don't want to congratulate the user for state they didn't just create.
+  function celebrateIfJustCompleted(prevPct: number) {
+    if (
+      prevPct !== 100
+      && completionPercentage.value === 100
+      && tasks.value.length > 0
+    ) {
       useNotificationStore().notify('success', 'All done!', { confetti: true })
     }
-  })
+  }
 
   // Sorted copy — newest createdAt first
   const tasksByDate = computed(() =>
@@ -99,13 +106,26 @@ export const useTasksStore = defineStore('tasks', () => {
   async function fetchTasks() {
     loading.value = true
     clearError()
+    const baseLoadError =
+      'Failed to load tasks. Please check your connection and try again.'
     try {
-      const todos = await $fetch<ApiTodo[]>(
+      const todos = await $fetch<unknown>(
         'https://jsonplaceholder.typicode.com/todos?_limit=20',
       )
-      tasks.value = apiTodosToTasks(todos)
-    } catch {
-      const message = 'Failed to load tasks. Please check your connection and try again.'
+      if (!Array.isArray(todos)) {
+        const message =
+          'Could not load tasks — the server returned an unexpected response.'
+        error.value = message
+        useNotificationStore().notify('error', message)
+        return
+      }
+      tasks.value = apiTodosToTasks(todos as ApiTodo[])
+    } catch (e: unknown) {
+      let message = baseLoadError
+      if (typeof e === 'object' && e !== null && 'statusCode' in e) {
+        const sc = (e as { statusCode?: number }).statusCode
+        if (typeof sc === 'number') message = `${baseLoadError} (Error ${sc})`
+      }
       error.value = message
       useNotificationStore().notify('error', message)
     } finally {
@@ -129,18 +149,22 @@ export const useTasksStore = defineStore('tasks', () => {
   function toggleTask(id: number) {
     const task = tasks.value.find(t => t.id === id)
     if (!task) return
+    const prevPct = completionPercentage.value
     task.completed = !task.completed
     useNotificationStore().notify(
       'info',
       task.completed ? `"${task.title}" marked complete.` : `"${task.title}" marked incomplete.`,
     )
+    celebrateIfJustCompleted(prevPct)
   }
 
   function deleteTask(id: number) {
     const index = tasks.value.findIndex(t => t.id === id)
     if (index === -1) return
+    const prevPct = completionPercentage.value
     tasks.value.splice(index, 1)
     useNotificationStore().notify('info', 'Task removed')
+    celebrateIfJustCompleted(prevPct)
   }
 
   function clearCompleted() {

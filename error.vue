@@ -2,7 +2,7 @@
 import AppHeader from '~/components/AppHeader.vue'
 import NotificationToastStack from '~/components/NotificationToastStack.vue'
 import Button from '~/components/ui/button/Button.vue'
-import { notifyErrorDeduped } from '~/lib/notifyErrorDeduped'
+import { useNotificationStore } from '~/stores/useNotificationStore'
 
 const err = useError()
 
@@ -29,9 +29,9 @@ onMounted(() => {
     const toastMsg = is404.value
       ? 'That page could not be found.'
       : 'Something went wrong. Please try again.'
-    notifyErrorDeduped(toastMsg)
+    useNotificationStore().notify('error', toastMsg)
   } catch {
-    // If Pinia failed, still show this page
+    // If Pinia isn't available here we still want the page itself to render
   }
 })
 

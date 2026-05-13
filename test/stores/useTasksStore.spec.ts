@@ -160,6 +160,40 @@ describe('useTasksStore', () => {
     )
   })
 
+  it('fetchTasks appends HTTP status when $fetch rejects with statusCode', async () => {
+    const store = useTasksStore()
+    const notif = useNotificationStore()
+    const spy = vi.spyOn(notif, 'notify')
+    vi.stubGlobal(
+      '$fetch',
+      vi.fn().mockRejectedValue(Object.assign(new Error('Bad Gateway'), { statusCode: 502 })),
+    )
+    await store.fetchTasks()
+    expect(store.error).toBe(
+      'Failed to load tasks. Please check your connection and try again. (Error 502)',
+    )
+    expect(spy).toHaveBeenCalledWith(
+      'error',
+      'Failed to load tasks. Please check your connection and try again. (Error 502)',
+    )
+  })
+
+  it('fetchTasks treats non-array JSON as an error', async () => {
+    const store = useTasksStore()
+    const notif = useNotificationStore()
+    const spy = vi.spyOn(notif, 'notify')
+    vi.stubGlobal('$fetch', vi.fn().mockResolvedValue({ not: 'an array' }))
+    await store.fetchTasks()
+    expect(store.error).toBe(
+      'Could not load tasks — the server returned an unexpected response.',
+    )
+    expect(spy).toHaveBeenCalledWith(
+      'error',
+      'Could not load tasks — the server returned an unexpected response.',
+    )
+    expect(store.tasks).toHaveLength(0)
+  })
+
   it('addTask ignores whitespace-only title', () => {
     const store = useTasksStore()
     store.addTask('   ')
@@ -284,6 +318,62 @@ describe('useTasksStore', () => {
     ]
     store.toggleTask(1)
     store.toggleTask(2)
+    await nextTick()
+    const allDoneCalls = spy.mock.calls.filter(
+      c =>
+        c[0] === 'success'
+        && c[1] === 'All done!'
+        && (c[2] as { confetti?: boolean } | undefined)?.confetti === true,
+    )
+    expect(allDoneCalls).toHaveLength(1)
+  })
+
+  it('does not fire "All done!" when hydrating fully completed tasks from storage', async () => {
+    const store = useTasksStore()
+    const notif = useNotificationStore()
+    const spy = vi.spyOn(notif, 'notify')
+    store.hydrateFromStorage({
+      v: 1,
+      tasks: [
+        { id: 1, title: 'a', completed: true, createdAt: '2024-01-01T00:00:00.000Z' },
+        { id: 2, title: 'b', completed: true, createdAt: '2024-01-01T00:00:00.000Z' },
+      ],
+    })
+    await nextTick()
+    const allDoneCalls = spy.mock.calls.filter(
+      c => c[0] === 'success' && c[1] === 'All done!',
+    )
+    expect(allDoneCalls).toHaveLength(0)
+  })
+
+  it('does not fire "All done!" when fetchTasks returns all-completed tasks', async () => {
+    const store = useTasksStore()
+    const notif = useNotificationStore()
+    const spy = vi.spyOn(notif, 'notify')
+    vi.stubGlobal(
+      '$fetch',
+      vi.fn().mockResolvedValue([
+        { id: 1, title: 'a', completed: true },
+        { id: 2, title: 'b', completed: true },
+      ]),
+    )
+    await store.fetchTasks()
+    await nextTick()
+    const allDoneCalls = spy.mock.calls.filter(
+      c => c[0] === 'success' && c[1] === 'All done!',
+    )
+    expect(allDoneCalls).toHaveLength(0)
+  })
+
+  it('fires "All done!" when deleting the last pending task', async () => {
+    const store = useTasksStore()
+    const notif = useNotificationStore()
+    const spy = vi.spyOn(notif, 'notify')
+    store.tasks = [
+      { id: 1, title: 'a', completed: true, createdAt: new Date() },
+      { id: 2, title: 'b', completed: false, createdAt: new Date() },
+    ]
+    store.deleteTask(2)
     await nextTick()
     const allDoneCalls = spy.mock.calls.filter(
       c =>
